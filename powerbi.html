@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power BI: Zero to Hero — Elluri Rajashekar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF9F5;
+    --panel:#FFFFFF;
+    --panel-hi:#F6F3E9;
+    --line:#E9E3D2;
+    --line-soft:#F0ECDF;
+    --text:#1C1D1F;
+    --muted:#5B5E63;
+    --muted-dim:#8D9095;
+    --yellow:#F2C811;
+    --yellow-deep:#9C7700;
+    --yellow-dim:rgba(242,200,17,0.18);
+    --navy:#243142;
+    --navy-deep:#141C26;
+    --navy-dim:rgba(36,49,66,0.08);
+    --radius:10px;
+    --maxw:1120px;
+    --shadow:0 20px 45px -25px rgba(28,29,31,0.18);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  ::selection{background:var(--yellow-dim); color:var(--text);}
+
+  .bg-grid{
+    position:fixed; inset:0; z-index:0;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size:42px 42px;
+    -webkit-mask-image:radial-gradient(ellipse 80% 55% at 50% 0%, black 35%, transparent 88%);
+    mask-image:radial-gradient(ellipse 80% 55% at 50% 0%, black 35%, transparent 88%);
+    opacity:0.75; pointer-events:none;
+  }
+  .bg-blob{position:fixed; z-index:0; border-radius:50%; filter:blur(70px); pointer-events:none;}
+  .blob-1{width:420px; height:420px; top:-120px; right:-100px; background:rgba(242,200,17,0.20);}
+  .blob-2{width:360px; height:360px; top:440px; left:-140px; background:rgba(36,49,66,0.08);}
+
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px; position:relative; z-index:1;}
+
+  .scroll-progress{
+    position:fixed; top:0; left:0; height:3px; width:0%;
+    background:linear-gradient(90deg, var(--navy), var(--yellow-deep), var(--yellow));
+    z-index:100; transition:width .08s linear;
+  }
+
+  /* ---------- Nav ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(250,249,245,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{display:flex; align-items:center; justify-content:space-between; padding:16px 0; gap:16px;}
+  .brand{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px;
+    text-decoration:none; color:var(--text);
+    display:flex; align-items:center; gap:8px; white-space:nowrap;
+  }
+  .brand .dot{width:8px;height:8px;background:var(--yellow-deep);border-radius:2px;display:inline-block;}
+  .pill-nav{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none;}
+  .pill-nav::-webkit-scrollbar{display:none;}
+  .pill-nav a{
+    font-family:'JetBrains Mono',monospace; font-size:12px; text-decoration:none; color:var(--muted);
+    padding:7px 13px; border-radius:999px; border:1px solid transparent; white-space:nowrap;
+    transition:all .2s ease;
+  }
+  .pill-nav a:hover, .pill-nav a:focus-visible{color:var(--text); border-color:var(--line);}
+  .pill-nav a.active{color:var(--navy-deep); background:var(--yellow); font-weight:600; border-color:var(--yellow);}
+  .home-link{
+    font-family:'JetBrains Mono',monospace; font-size:12px; text-decoration:none; color:var(--navy);
+    border:1px solid var(--line); padding:7px 14px; border-radius:999px; white-space:nowrap;
+    transition:all .2s ease; flex-shrink:0;
+  }
+  .home-link:hover{background:var(--yellow-dim); border-color:var(--yellow);}
+
+  /* ---------- Animated name intro ---------- */
+  .name-intro{
+    padding:20px 0 0;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .name-intro .avatar-dot{
+    width:10px; height:10px; border-radius:50%; background:var(--yellow);
+    box-shadow:0 0 0 4px var(--yellow-dim);
+    animation:pulseDot 2.4s ease-in-out infinite;
+  }
+  @keyframes pulseDot{0%,100%{box-shadow:0 0 0 4px var(--yellow-dim);} 50%{box-shadow:0 0 0 8px transparent;}}
+  .name-line{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--navy-deep);
+    display:flex; flex-wrap:wrap;
+  }
+  .name-line .letter{
+    display:inline-block;
+    opacity:0;
+    transform:translateY(10px);
+    animation:letterIn .5s ease forwards;
+  }
+  .name-line .role{color:var(--yellow-deep);}
+  @keyframes letterIn{to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:36px 0 56px; position:relative;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--navy);
+    letter-spacing:0.1em; text-transform:uppercase;
+    display:flex; align-items:center; gap:10px; margin-bottom:22px;
+    opacity:0; animation:fadeUp .7s ease .3s forwards;
+  }
+  .eyebrow::before{content:"DAX"; background:var(--yellow-dim); color:var(--yellow-deep); padding:2px 7px; border-radius:4px; font-size:11px;}
+  h1.hero-title{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:clamp(2.4rem, 6vw, 4.2rem); line-height:1.05; margin:0 0 22px;
+    letter-spacing:-0.02em; max-width:16ch;
+    opacity:0; animation:fadeUp .7s ease .4s forwards;
+  }
+  h1.hero-title .accent{color:var(--yellow-deep);}
+  .hero p.lede{
+    font-size:17.5px; line-height:1.7; color:var(--muted); max-width:58ch; margin:0 0 32px;
+    opacity:0; animation:fadeUp .7s ease .5s forwards;
+  }
+  .hero-stats{display:flex; gap:36px; margin-bottom:36px; flex-wrap:wrap; opacity:0; animation:fadeUp .7s ease .55s forwards;}
+  .hstat .num{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:28px; color:var(--navy); display:flex; align-items:baseline; gap:2px;}
+  .hstat .num sup{font-size:16px; color:var(--yellow-deep);}
+  .hstat .label{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted-dim); text-transform:uppercase; letter-spacing:0.04em;}
+
+  @keyframes fadeUp{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes blink{50%{opacity:0;}}
+  @keyframes popIn{from{opacity:0; transform:scale(.9) translateY(6px);} to{opacity:1; transform:scale(1) translateY(0);}}
+  @keyframes growBar{from{transform:scaleY(0);} to{transform:scaleY(1);}}
+
+  /* report canvas mock */
+  .report-mock{
+    max-width:640px; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    overflow:hidden; opacity:0; animation:fadeUp .7s ease .65s forwards; box-shadow:var(--shadow);
+  }
+  .rm-head{
+    display:flex; align-items:center; gap:8px; padding:9px 14px;
+    background:var(--panel-hi); border-bottom:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted);
+  }
+  .rm-head .dot-set{display:flex; gap:5px; margin-right:6px;}
+  .rm-head .dotc{width:8px; height:8px; border-radius:50%;}
+  .rm-body{padding:20px 20px 16px; display:grid; grid-template-columns:1.3fr 1fr; gap:18px;}
+  .rm-chart{
+    display:flex; align-items:flex-end; gap:8px; height:110px; border-bottom:1px solid var(--line); padding-bottom:2px;
+  }
+  .rm-chart .bar{
+    flex:1; background:linear-gradient(180deg, var(--yellow), var(--yellow-deep));
+    border-radius:4px 4px 0 0; transform-origin:bottom; animation:growBar 1s ease forwards;
+  }
+  .rm-side{display:flex; flex-direction:column; gap:10px; justify-content:center;}
+  .rm-kpi{
+    background:var(--panel-hi); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+  }
+  .rm-kpi .kv{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--navy);}
+  .rm-kpi .kl{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted-dim); text-transform:uppercase;}
+  .rm-formula{
+    border-top:1px solid var(--line); padding:12px 20px 16px;
+    font-family:'JetBrains Mono',monospace; font-size:13.5px; color:var(--text); background:var(--panel-hi);
+  }
+  .rm-formula .caret{display:inline-block; width:8px; height:14px; background:var(--yellow-deep); margin-left:2px; animation:blink 1s step-end infinite; vertical-align:middle;}
+
+  /* ---------- Skill ladder ---------- */
+  .ladder-section{padding:20px 0 70px;}
+  .ladder{display:grid; grid-template-columns:repeat(5,1fr); gap:0; position:relative;}
+  .ladder::before{content:""; position:absolute; top:17px; left:5%; right:5%; height:2px; background:var(--line);}
+  .stage{position:relative; z-index:1; text-align:center; cursor:pointer;}
+  .stage .node{
+    width:36px; height:36px; border-radius:50%; background:var(--panel); border:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 12px;
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted-dim); transition:all .3s ease;
+  }
+  .stage.active .node{border-color:var(--yellow-deep); color:var(--yellow-deep); background:var(--yellow-dim); box-shadow:0 0 0 5px var(--yellow-dim);}
+  .stage .label{font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--muted-dim); transition:color .3s ease;}
+  .stage.active .label{color:var(--text);}
+  .stage .sub{font-size:11px; color:var(--muted-dim); margin-top:2px;}
+
+  /* ---------- Sections ---------- */
+  .section{padding:60px 0; border-top:1px solid var(--line-soft);}
+  .section-head{display:flex; align-items:baseline; gap:16px; margin-bottom:34px; flex-wrap:wrap;}
+  .section-num{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--yellow-deep); background:var(--yellow-dim); padding:3px 9px; border-radius:4px;}
+  .section-title{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:clamp(1.5rem,3vw,2rem); margin:0;}
+  .section-desc{color:var(--muted); font-size:15px; max-width:70ch; margin:-18px 0 34px; line-height:1.6;}
+
+  .reveal{opacity:0; transform:translateY(24px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* ---------- Accordion ---------- */
+  .acc-grid{display:grid; gap:12px;}
+  .acc-item{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; transition:border-color .2s ease, box-shadow .2s ease;}
+  .acc-item:hover{border-color:var(--yellow-deep); box-shadow:var(--shadow);}
+  .acc-item summary{
+    list-style:none; cursor:pointer; padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15.5px;
+  }
+  .acc-item summary::-webkit-details-marker{display:none;}
+  .acc-item summary .plus{font-family:'JetBrains Mono',monospace; color:var(--yellow-deep); font-size:18px; flex-shrink:0; transition:transform .25s ease;}
+  .acc-item[open] summary .plus{transform:rotate(45deg);}
+  .acc-item summary .title-row{display:flex; align-items:center; gap:12px; min-width:0;}
+  .acc-item summary .idx{color:var(--muted-dim); font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:400;}
+  .acc-body{padding:0 20px 22px; color:var(--muted); font-size:14.5px; line-height:1.7;}
+  .acc-body p{margin:0 0 12px;}
+
+  .formula-chip{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:13px;
+    background:var(--panel-hi); border:1px solid var(--line); color:var(--yellow-deep);
+    padding:5px 10px; border-radius:5px; margin:3px 6px 3px 0;
+  }
+  .code-block{
+    background:var(--navy-deep); border:1px solid #33465C; border-radius:8px; padding:14px 16px;
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:#EDEFEF; overflow-x:auto; margin:10px 0; line-height:1.6;
+  }
+  .code-block .c-fn{color:#F2C811;}
+  .code-block .c-str{color:#7FD9B0;}
+  .code-block .c-com{color:#7C8A9C;}
+  .code-block .c-var{color:#8FB8FF;}
+
+  .tag-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .tag{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); border:1px solid var(--line); padding:3px 8px; border-radius:4px;}
+
+  .feature-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+  .feature-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;}
+  .feature-card:hover{transform:translateY(-4px); border-color:var(--yellow-deep); box-shadow:var(--shadow);}
+  .feature-card .fc-num{font-family:'JetBrains Mono',monospace; color:var(--navy); font-size:12px; margin-bottom:10px; display:block;}
+  .feature-card h4{font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:16px;}
+  .feature-card p{color:var(--muted); font-size:14px; line-height:1.65; margin:0;}
+
+  /* ---------- Cheat sheet ---------- */
+  .cheat-controls{display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:22px;}
+  .search-box{position:relative; flex:1; min-width:220px;}
+  .search-box input{
+    width:100%; font-family:'JetBrains Mono',monospace; font-size:13.5px;
+    padding:11px 14px 11px 36px; border-radius:8px; border:1px solid var(--line);
+    background:var(--panel); color:var(--text); outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .search-box input:focus{border-color:var(--yellow-deep); box-shadow:0 0 0 3px var(--yellow-dim);}
+  .search-box::before{content:"⌕"; position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted-dim); font-size:16px; pointer-events:none;}
+  .cat-pills{display:flex; gap:7px; flex-wrap:wrap;}
+  .cat-pill{
+    font-family:'JetBrains Mono',monospace; font-size:12px; padding:8px 13px; border-radius:999px;
+    border:1px solid var(--line); background:var(--panel); color:var(--muted); cursor:pointer; transition:all .2s ease;
+  }
+  .cat-pill:hover{border-color:var(--yellow-deep);}
+  .cat-pill.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .cheat-meta{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted-dim); margin-bottom:16px;}
+  .cheat-meta b{color:var(--navy);}
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:12px;}
+  .cheat-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px 16px 14px;
+    animation:popIn .35s ease; transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .cheat-card:hover{border-color:var(--yellow-deep); box-shadow:var(--shadow); transform:translateY(-2px);}
+  .cheat-card-head{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .cheat-name{font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14.5px; color:var(--navy);}
+  .cheat-badges{display:flex; gap:6px; align-items:center;}
+  .star-badge{color:var(--yellow-deep); font-size:13px;}
+  .cat-badge{
+    font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--muted-dim);
+    background:var(--panel-hi); border:1px solid var(--line); padding:2px 7px; border-radius:4px; white-space:nowrap;
+  }
+  .cheat-syntax{
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; background:var(--panel-hi);
+    border:1px solid var(--line-soft); padding:8px 10px; border-radius:6px; color:var(--text); overflow-x:auto; white-space:nowrap;
+  }
+  .cheat-desc{font-size:13px; color:var(--muted); line-height:1.55; flex-grow:1;}
+  .copy-btn{
+    align-self:flex-start; font-family:'JetBrains Mono',monospace; font-size:11.5px;
+    background:none; border:1px solid var(--line); color:var(--muted); padding:5px 11px; border-radius:6px; cursor:pointer;
+    transition:all .18s ease;
+  }
+  .copy-btn:hover{border-color:var(--yellow-deep); color:var(--navy);}
+  .copy-btn.copied{background:var(--yellow); border-color:var(--yellow); color:var(--navy-deep);}
+  .no-results{grid-column:1/-1; text-align:center; padding:40px 0; color:var(--muted-dim); font-family:'JetBrains Mono',monospace; font-size:13px;}
+
+  /* ---------- Shortcut sheet ---------- */
+  .shortcut-sheet{border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--panel);}
+  .sc-row{display:grid; grid-template-columns:1fr 160px; border-bottom:1px solid var(--line);}
+  .sc-row:last-child{border-bottom:none;}
+  .sc-row.sc-header{background:var(--panel-hi);}
+  .sc-cell{padding:12px 18px; font-size:13.5px; border-right:1px solid var(--line);}
+  .sc-row .sc-cell:last-child{border-right:none;}
+  .sc-header .sc-cell{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted-dim);}
+  .sc-row:not(.sc-header) .sc-cell:last-child{font-family:'JetBrains Mono',monospace; color:var(--yellow-deep); font-size:13px;}
+
+  /* ---------- Learning path ---------- */
+  .path{position:relative; padding-left:32px;}
+  .path::before{content:""; position:absolute; left:6px; top:6px; bottom:6px; width:2px; background:var(--line);}
+  .path-item{position:relative; padding-bottom:30px;}
+  .path-item:last-child{padding-bottom:0;}
+  .path-item::before{content:""; position:absolute; left:-32px; top:4px; width:14px; height:14px; border-radius:50%; background:var(--panel); border:2px solid var(--yellow-deep);}
+  .path-item h4{font-family:'Space Grotesk',sans-serif; margin:0 0 6px; font-size:15.5px;}
+  .path-item p{margin:0; color:var(--muted); font-size:14px; line-height:1.6;}
+
+  /* ---------- CTA / footer ---------- */
+  .cta{text-align:center; padding:80px 0 60px;}
+  .cta h2{font-family:'Space Grotesk',sans-serif; font-size:clamp(1.8rem,4vw,2.6rem); margin:0 0 16px;}
+  .cta p{color:var(--muted); max-width:52ch; margin:0 auto 28px;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; background:var(--yellow); color:var(--navy-deep); font-weight:700;
+    font-family:'Inter',sans-serif; font-size:14.5px; padding:13px 26px; border-radius:8px; text-decoration:none;
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 14px 30px -12px rgba(242,200,17,0.55);}
+
+  footer{border-top:1px solid var(--line); padding:32px 0;}
+  .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;}
+  .foot-left{font-size:13px; color:var(--muted); line-height:1.6;}
+  .foot-left .copyright{font-family:'Space Grotesk',sans-serif; font-weight:600; color:var(--text); display:block; margin-bottom:2px;}
+  footer a{color:var(--navy); text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:12.5px; border-bottom:1px solid var(--yellow-deep);}
+
+  @media (max-width:820px){
+    .feature-grid{grid-template-columns:1fr;}
+    .stage .label{font-size:11px;}
+    .stage .sub{display:none;}
+    .sc-row{grid-template-columns:1fr 120px;}
+    .cheat-grid{grid-template-columns:1fr 1fr;}
+    .rm-body{grid-template-columns:1fr;}
+  }
+  @media (max-width:600px){
+    .pill-nav{display:none;}
+    .cheat-grid{grid-template-columns:1fr;}
+    .foot-row{flex-direction:column; align-items:flex-start;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+    .reveal{opacity:1; transform:none;}
+    .eyebrow,.hero-title,.hero p.lede,.hero-stats,.report-mock{opacity:1;}
+    .name-line .letter{opacity:1; transform:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<header>
+  <div class="wrap nav-row">
+    <a class="brand" href="#top"><span class="dot"></span>POWER BI: ZERO → HERO</a>
+    <nav class="pill-nav" id="pillNav">
+      <a href="#cheatsheet">DAX Cheat Sheet</a>
+      <a href="#getting-started">Interface</a>
+      <a href="#power-query">Get Data</a>
+      <a href="#modeling">Data Modeling</a>
+      <a href="#dax-basics">DAX Basics</a>
+      <a href="#time-intel">Time Intelligence</a>
+      <a href="#visuals">Visualizations</a>
+      <a href="#reports">Reports</a>
+      <a href="#rls">Security</a>
+      <a href="#service">Publishing</a>
+      <a href="#performance">Performance</a>
+      <a href="#shortcuts">Shortcuts</a>
+      <a href="#path">Learning Path</a>
+    </nav>
+    <a class="home-link" href="https://rajashekarelluri1.github.io/about/">← Portfolio Home</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" id="top">
+    <div class="name-intro">
+      <span class="avatar-dot"></span>
+      <span class="name-line" id="animatedName"></span>
+    </div>
+
+    <div class="eyebrow">Complete guide · 12 modules</div>
+    <h1 class="hero-title">Power BI, from blank<br>canvas to <span class="accent">boardroom-ready</span> report.</h1>
+    <p class="lede">Data modeling, Power Query, DAX, visualizations, Row-Level Security, and the Power BI Service — plus a full searchable DAX cheat sheet — in one reference built to be worked through, not skimmed.</p>
+
+    <div class="hero-stats">
+      <div class="hstat"><div class="num" id="statDax">0<sup>+</sup></div><div class="label">DAX functions</div></div>
+      <div class="hstat"><div class="num" id="statModules">0</div><div class="label">Modules</div></div>
+      <div class="hstat"><div class="num" id="statWeeks">0<sup>wk</sup></div><div class="label">Learning path</div></div>
+    </div>
+
+    <div class="report-mock">
+      <div class="rm-head">
+        <span class="dot-set"><span class="dotc" style="background:#E4572E"></span><span class="dotc" style="background:#F2C811"></span><span class="dotc" style="background:#2BAF7C"></span></span>
+        Sales Overview — Report View
+      </div>
+      <div class="rm-body">
+        <div class="rm-chart" id="rmChart"></div>
+        <div class="rm-side">
+          <div class="rm-kpi"><div class="kv">₹4.82Cr</div><div class="kl">Total Sales</div></div>
+          <div class="rm-kpi"><div class="kv">+18.4%</div><div class="kl">YoY Growth</div></div>
+          <div class="rm-kpi"><div class="kv">1,204</div><div class="kl">Active Customers</div></div>
+        </div>
+      </div>
+      <div class="rm-formula">Total Sales YTD = <span id="typedDax"></span><span class="caret"></span></div>
+    </div>
+  </section>
+
+  <section class="ladder-section wrap">
+    <div class="ladder" id="ladder">
+      <div class="stage active" data-target="getting-started"><div class="node">01</div><div class="label">Beginner</div><div class="sub">Interface &amp; data</div></div>
+      <div class="stage" data-target="modeling"><div class="node">02</div><div class="label">Intermediate</div><div class="sub">Modeling &amp; DAX</div></div>
+      <div class="stage" data-target="time-intel"><div class="node">03</div><div class="label">Advanced</div><div class="sub">Time intelligence</div></div>
+      <div class="stage" data-target="reports"><div class="node">04</div><div class="label">Power User</div><div class="sub">Reports &amp; security</div></div>
+      <div class="stage" data-target="performance"><div class="node">05</div><div class="label">Hero</div><div class="sub">Service &amp; performance</div></div>
+    </div>
+  </section>
+
+  <!-- ============ DAX CHEAT SHEET ============ -->
+  <section class="section wrap" id="cheatsheet">
+    <div class="section-head reveal">
+      <span class="section-num">00</span>
+      <h2 class="section-title">The Complete DAX Cheat Sheet</h2>
+    </div>
+    <p class="section-desc reveal">Every DAX category you'll actually reach for, searchable by name or keyword. <span class="star-badge">★</span> marks the measures you'll write every single week.</p>
+
+    <div class="cheat-controls reveal">
+      <div class="search-box">
+        <input type="text" id="cheatSearch" placeholder="Search DAX… e.g. calculate, ytd, filter" autocomplete="off">
+      </div>
+      <div class="cat-pills" id="catPills"></div>
+    </div>
+
+    <div class="cheat-meta reveal" id="cheatMeta"></div>
+    <div class="cheat-grid reveal" id="cheatGrid"></div>
+  </section>
+
+  <!-- ============ GETTING STARTED ============ -->
+  <section class="section wrap" id="getting-started">
+    <div class="section-head reveal">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Getting Started — The Power BI Interface</h2>
+    </div>
+    <p class="section-desc reveal">Three views, one file. Understanding what each one is for prevents most beginner confusion.</p>
+
+    <div class="feature-grid reveal">
+      <div class="feature-card">
+        <span class="fc-num">1.1</span>
+        <h4>Report View</h4>
+        <p>Where you build visuals on a canvas — drag fields, format charts, arrange pages. This is what end users see when a report is shared.</p>
+      </div>
+      <div class="feature-card">
+        <span class="fc-num">1.2</span>
+        <h4>Data View</h4>
+        <p>A spreadsheet-like look at every loaded table, row by row. Use it to sanity-check that a transformation or DAX column actually did what you expected.</p>
+      </div>
+      <div class="feature-card">
+        <span class="fc-num">1.3</span>
+        <h4>Model View</h4>
+        <p>The relationship diagram between all your tables — the single most important view for keeping a report accurate as it grows.</p>
+      </div>
+      <div class="feature-card">
+        <span class="fc-num">1.4</span>
+        <h4>Fields pane</h4>
+        <p>Every table and column across your model, searchable. Right-click to rename, hide, or create a new measure without leaving the canvas.</p>
+      </div>
+      <div class="feature-card">
+        <span class="fc-num">1.5</span>
+        <h4>Filters pane</h4>
+        <p>Three scopes — visual, page, and report level — each stacking on top of the others. A visual showing the "wrong" number is almost always an upstream filter.</p>
+      </div>
+      <div class="feature-card">
+        <span class="fc-num">1.6</span>
+        <h4>Formatting pane</h4>
+        <p>Per-visual styling — titles, colors, data labels, conditional formatting. Save a theme once your palette is set, so every new report starts consistent.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ POWER QUERY / GET DATA ============ -->
+  <section class="section wrap" id="power-query">
+    <div class="section-head reveal">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Get Data &amp; Power Query</h2>
+    </div>
+    <p class="section-desc reveal">The same Power Query engine as Excel, with more connectors — this is where messy source data becomes a clean, load-ready table.</p>
+
+    <div class="acc-grid reveal">
+      <details class="acc-item" open>
+        <summary><span class="title-row"><span class="idx">2.1</span> Common data sources</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <span class="tag-row">
+            <span class="tag">Excel / CSV</span>
+            <span class="tag">SQL Server</span>
+            <span class="tag">SharePoint</span>
+            <span class="tag">Web / API</span>
+            <span class="tag">Dataverse</span>
+            <span class="tag">Google BigQuery</span>
+            <span class="tag">Azure Synapse</span>
+          </span>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">2.2</span> Import vs DirectQuery</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p><strong>Import</strong> copies data into the model — fast, fully-featured DAX, needs a refresh schedule. <strong>DirectQuery</strong> queries the source live on every interaction — always current, but slower and with some DAX limitations. Most reports should default to Import unless the data is too large or must be real-time.</p>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">2.3</span> Query folding</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>Power Query pushes transformation steps back to the source database when possible, instead of pulling raw data and filtering locally. Keep folding-breaking steps (like custom columns with M functions) as late in the query as possible to preserve performance.</p>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">2.4</span> Parameters</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>Define a reusable value — a file path, a date, an environment name — once, and reference it across every query. Switching a report from a test to a production data source becomes a one-line change instead of editing every query.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ DATA MODELING ============ -->
+  <section class="section wrap" id="modeling">
+    <div class="section-head reveal">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Data Modeling</h2>
+    </div>
+    <p class="section-desc reveal">The single biggest skill gap between a beginner and an intermediate Power BI user. Get the model right and DAX becomes simple; get it wrong and every measure fights you.</p>
+
+    <div class="acc-grid reveal">
+      <details class="acc-item" open>
+        <summary><span class="title-row"><span class="idx">3.1</span> Star schema</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>One central <strong>fact table</strong> (transactions, sales, events — the "what happened") connected to several <strong>dimension tables</strong> (Date, Product, Customer, Region — the "how do I slice it"). This shape is what Power BI's engine is optimized for.</p>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">3.2</span> Relationships &amp; cardinality</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>Most relationships should be <strong>one-to-many</strong>, filtering in a <strong>single direction</strong> from dimension to fact. Bidirectional filtering looks convenient but can silently cause ambiguous or duplicated results as the model grows — use it deliberately, not by default.</p>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">3.3</span> The Date table</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>Every model with time-based analysis needs one dedicated Date table, marked as the official date table (<strong>Model view → right-click table → Mark as date table</strong>). Nearly every time-intelligence DAX function depends on this being set up correctly.</p>
+          <div class="code-block"><span class="c-com">-- A basic calculated Date table</span><br>DateTable = <span class="c-fn">CALENDAR</span>(<span class="c-fn">DATE</span>(2023,1,1), <span class="c-fn">DATE</span>(2026,12,31))</div>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">3.4</span> Calculated columns vs measures</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>A <strong>calculated column</strong> is computed row-by-row and stored in the model (uses memory, refresh time). A <strong>measure</strong> is computed on the fly based on whatever's currently filtered (no storage cost, always context-aware). Default to measures; reach for columns only when you need to filter, sort, or slice by the result.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ DAX BASICS ============ -->
+  <section class="section wrap" id="dax-basics">
+    <div class="section-head reveal">
+      <span class="section-num">04</span>
+      <h2 class="section-title">DAX Fundamentals</h2>
+    </div>
+    <p class="section-desc reveal">The concept that unlocks everything else in DAX: every formula evaluates inside a context, and that context changes what the same formula returns.</p>
+
+    <div class="acc-grid reveal">
+      <details class="acc-item" open>
+        <summary><span class="title-row"><span class="idx">4.1</span> Row context vs filter context</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p><strong>Row context</strong> exists inside calculated columns and iterator functions (SUMX, FILTER) — DAX evaluates the formula once per row. <strong>Filter context</strong> is whatever's currently sliced, filtered, or grouped by a visual — it's why the same measure returns a different number in every cell of a matrix.</p>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">4.2</span> CALCULATE — the most important function in DAX</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>CALCULATE evaluates an expression inside a modified filter context. Nearly every non-trivial measure is CALCULATE wrapping something simpler.</p>
+          <div class="code-block"><span class="c-com">-- Sales, ignoring whatever region is currently filtered</span><br>All Region Sales = <span class="c-fn">CALCULATE</span>([Total Sales], <span class="c-fn">ALL</span>(Region))<br><br><span class="c-com">-- Sales for just the "Online" channel, regardless of slicer selection</span><br>Online Sales = <span class="c-fn">CALCULATE</span>([Total Sales], Channel[Type] = <span class="c-str">"Online"</span>)</div>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">4.3</span> Variables (VAR / RETURN)</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>Name an intermediate calculation once, reuse it, and make the formula readable — the DAX equivalent of Excel's LET.</p>
+          <div class="code-block"><span class="c-var">VAR</span> CurrentSales = <span class="c-fn">SUM</span>(Sales[Amount])<br><span class="c-var">VAR</span> PriorSales = <span class="c-fn">CALCULATE</span>(<span class="c-fn">SUM</span>(Sales[Amount]), <span class="c-fn">SAMEPERIODLASTYEAR</span>('Date'[Date]))<br><span class="c-var">RETURN</span> <span class="c-fn">DIVIDE</span>(CurrentSales - PriorSales, PriorSales)</div>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">4.4</span> DIVIDE over the / operator</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p><span class="formula-chip">DIVIDE(numerator, denominator, [alternate])</span> handles divide-by-zero gracefully and returns a clean alternate value (often blank or 0) instead of an error breaking the visual.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ TIME INTELLIGENCE ============ -->
+  <section class="section wrap" id="time-intel">
+    <div class="section-head reveal">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Time Intelligence</h2>
+    </div>
+    <p class="section-desc reveal">YTD, growth-over-prior-period, rolling averages — the calculations every stakeholder asks for, built on a correctly marked Date table.</p>
+
+    <div class="acc-grid reveal">
+      <details class="acc-item" open>
+        <summary><span class="title-row"><span class="idx">5.1</span> YTD / QTD / MTD</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <div class="code-block">Sales YTD = <span class="c-fn">TOTALYTD</span>([Total Sales], 'Date'[Date])<br>Sales QTD = <span class="c-fn">TOTALQTD</span>([Total Sales], 'Date'[Date])<br>Sales MTD = <span class="c-fn">TOTALMTD</span>([Total Sales], 'Date'[Date])</div>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">5.2</span> Year-over-year comparison</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <div class="code-block"><span class="c-var">VAR</span> PriorYear = <span class="c-fn">CALCULATE</span>([Total Sales], <span class="c-fn">SAMEPERIODLASTYEAR</span>('Date'[Date]))<br><span class="c-var">RETURN</span> <span class="c-fn">DIVIDE</span>([Total Sales] - PriorYear, PriorYear)</div>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">5.3</span> Rolling windows</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p><span class="formula-chip">DATESINPERIOD('Date'[Date], LASTDATE('Date'[Date]), -12, MONTH)</span> inside a CALCULATE builds a rolling 12-month view — useful for smoothing seasonal spikes out of a trend line.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ VISUALIZATIONS ============ -->
+  <section class="section wrap" id="visuals">
+    <div class="section-head reveal">
+      <span class="section-num">06</span>
+      <h2 class="section-title">Visualizations</h2>
+    </div>
+    <p class="section-desc reveal">Choosing the right chart matters more than making it pretty — the wrong shape makes a correct number look wrong.</p>
+
+    <div class="feature-grid reveal">
+      <div class="feature-card"><span class="fc-num">6.1</span><h4>Line &amp; area charts</h4><p>Trend over time. Use area sparingly — stacked areas are hard to compare accurately above the bottom layer.</p></div>
+      <div class="feature-card"><span class="fc-num">6.2</span><h4>Bar &amp; column charts</h4><p>Comparison across categories. Horizontal bars read better with long category names.</p></div>
+      <div class="feature-card"><span class="fc-num">6.3</span><h4>Matrix &amp; table</h4><p>When exact numbers matter more than the shape of the data — finance and audit-style reports lean on these heavily.</p></div>
+      <div class="feature-card"><span class="fc-num">6.4</span><h4>Cards &amp; KPIs</h4><p>One headline number, always visible, usually top-left — the answer to the single most important question on the page.</p></div>
+      <div class="feature-card"><span class="fc-num">6.5</span><h4>Slicers</h4><p>Turn one report into many views. Sync slicers across pages via <strong>View → Sync slicers</strong> so a filter choice persists as users navigate.</p></div>
+      <div class="feature-card"><span class="fc-num">6.6</span><h4>Custom visuals (AppSource)</h4><p>Use sparingly — native visuals load faster and behave more predictably. Reach for custom visuals only when a native chart genuinely can't do the job.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ REPORTS & DASHBOARDS ============ -->
+  <section class="section wrap" id="reports">
+    <div class="section-head reveal">
+      <span class="section-num">07</span>
+      <h2 class="section-title">Reports, Bookmarks &amp; Drill-through</h2>
+    </div>
+    <p class="section-desc reveal">Interactivity is what separates a Power BI report from a static export — these features turn one page into a guided experience.</p>
+
+    <div class="acc-grid reveal">
+      <details class="acc-item" open>
+        <summary><span class="title-row"><span class="idx">7.1</span> Bookmarks</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Capture the exact state of a page — filters, slicer selections, visibility — and return to it with a button click. Commonly used to build toggle-able views ("Summary" vs "Detail") on the same page.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">7.2</span> Drill-through</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Right-click a data point to jump to a detail page pre-filtered to that context — e.g. click a region on a map to land on a page showing only that region's accounts.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">7.3</span> Tooltip pages</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>A small report page shown on hover instead of the default tooltip — useful for showing a mini trend chart without cluttering the main visual.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">7.4</span> Mobile layout</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Design a separate phone-optimized layout in <strong>View → Mobile Layout</strong> — stakeholders checking a dashboard from their phone are a real and common audience.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ ROW-LEVEL SECURITY ============ -->
+  <section class="section wrap" id="rls">
+    <div class="section-head reveal">
+      <span class="section-num">08</span>
+      <h2 class="section-title">Row-Level Security (RLS)</h2>
+    </div>
+    <p class="section-desc reveal">One report, many audiences — each user sees only the rows relevant to them, without maintaining separate report copies.</p>
+
+    <div class="acc-grid reveal">
+      <details class="acc-item" open>
+        <summary><span class="title-row"><span class="idx">8.1</span> Static roles</span><span class="plus">+</span></summary>
+        <div class="acc-body">
+          <p>Define a role in <strong>Modeling → Manage roles</strong> with a DAX filter, then map users or groups to it in the Power BI Service.</p>
+          <div class="code-block"><span class="c-com">-- Role filter on the Region table</span><br>[Region] = <span class="c-fn">USERPRINCIPALNAME</span>()</div>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">8.2</span> Dynamic RLS</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Map users to allowed values in a table inside the model itself, rather than hardcoding per-role filters — scales to hundreds of users without creating a new role for each one.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">8.3</span> Testing RLS</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Use <strong>View as</strong> in Desktop before publishing — RLS bugs are much cheaper to catch locally than after a user reports seeing the wrong data.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ PUBLISHING & SERVICE ============ -->
+  <section class="section wrap" id="service">
+    <div class="section-head reveal">
+      <span class="section-num">09</span>
+      <h2 class="section-title">Publishing &amp; The Power BI Service</h2>
+    </div>
+    <p class="section-desc reveal">A report only creates value once someone else can see it, on schedule, with current data.</p>
+
+    <div class="feature-grid reveal">
+      <div class="feature-card"><span class="fc-num">9.1</span><h4>Workspaces</h4><p>The container for related reports, datasets, and dashboards — organize by team or project, not by individual report.</p></div>
+      <div class="feature-card"><span class="fc-num">9.2</span><h4>Apps</h4><p>A packaged, read-only view of a workspace's content, distributed to a wider audience without giving them edit access.</p></div>
+      <div class="feature-card"><span class="fc-num">9.3</span><h4>Scheduled refresh</h4><p>Set how often an Import-mode dataset pulls fresh data from its source — requires a gateway if the source is on-premises.</p></div>
+      <div class="feature-card"><span class="fc-num">9.4</span><h4>On-premises data gateway</h4><p>A bridge that lets the cloud-hosted Power BI Service securely reach data sources that live inside a private network.</p></div>
+      <div class="feature-card"><span class="fc-num">9.5</span><h4>Dashboards vs Reports</h4><p>Reports are multi-page and interactive; dashboards are a single pinned-tile summary, often built by combining visuals from several reports.</p></div>
+      <div class="feature-card"><span class="fc-num">9.6</span><h4>Sharing &amp; permissions</h4><p>Share at the workspace, app, or individual report level — match the scope to how much of the underlying data the recipient should actually see.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ PERFORMANCE ============ -->
+  <section class="section wrap" id="performance">
+    <div class="section-head reveal">
+      <span class="section-num">10</span>
+      <h2 class="section-title">Performance Optimization</h2>
+    </div>
+    <p class="section-desc reveal">A report that takes ten seconds to load per click will quietly stop being used, no matter how correct the numbers are.</p>
+
+    <div class="acc-grid reveal">
+      <details class="acc-item" open>
+        <summary><span class="title-row"><span class="idx">10.1</span> Model size discipline</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Remove unused columns before loading — every extra column increases file size and refresh time. Prefer star schema over one giant flat table; a well-modeled star schema compresses and queries far better.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">10.2</span> Performance Analyzer</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p><strong>View → Performance Analyzer</strong> shows exactly how long each visual took to query, render, and load on the current page — the first stop when a report feels slow.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">10.3</span> DAX Studio &amp; Tabular Editor</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Free external tools for profiling slow measures (DAX Studio) and bulk-editing model metadata faster than the native UI (Tabular Editor) — standard kit once you're managing larger models.</p></div>
+      </details>
+      <details class="acc-item">
+        <summary><span class="title-row"><span class="idx">10.4</span> Avoid over-using bidirectional filters and iterators</span><span class="plus">+</span></summary>
+        <div class="acc-body"><p>Bidirectional relationships and row-by-row iterator functions (SUMX over huge tables) are the two most common causes of a model that feels fine at 10,000 rows and grinds at 10 million.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ SHORTCUTS ============ -->
+  <section class="section wrap" id="shortcuts">
+    <div class="section-head reveal">
+      <span class="section-num">11</span>
+      <h2 class="section-title">Keyboard Shortcuts Every Analyst Should Know</h2>
+    </div>
+    <p class="section-desc reveal">Small time savings that compound across every report you build.</p>
+
+    <div class="shortcut-sheet reveal">
+      <div class="sc-row sc-header"><div class="sc-cell">Action</div><div class="sc-cell">Shortcut</div></div>
+      <div class="sc-row"><div class="sc-cell">New measure</div><div class="sc-cell">Alt + Shift + K (in table)</div></div>
+      <div class="sc-row"><div class="sc-cell">Duplicate selected visual</div><div class="sc-cell">Ctrl + D</div></div>
+      <div class="sc-row"><div class="sc-cell">Copy formatting between visuals</div><div class="sc-cell">Format Painter (ribbon)</div></div>
+      <div class="sc-row"><div class="sc-cell">Group selected visuals</div><div class="sc-cell">Ctrl + G</div></div>
+      <div class="sc-row"><div class="sc-cell">Undo / Redo</div><div class="sc-cell">Ctrl + Z / Ctrl + Y</div></div>
+      <div class="sc-row"><div class="sc-cell">Save file</div><div class="sc-cell">Ctrl + S</div></div>
+      <div class="sc-row"><div class="sc-cell">Refresh data</div><div class="sc-cell">Ctrl + Alt + F5</div></div>
+      <div class="sc-row"><div class="sc-cell">Toggle Filters pane</div><div class="sc-cell">Ctrl + Shift + F</div></div>
+      <div class="sc-row"><div class="sc-cell">Move to next visual</div><div class="sc-cell">Tab</div></div>
+      <div class="sc-row"><div class="sc-cell">Open Performance Analyzer</div><div class="sc-cell">View ribbon → Performance Analyzer</div></div>
+    </div>
+  </section>
+
+  <!-- ============ LEARNING PATH ============ -->
+  <section class="section wrap" id="path">
+    <div class="section-head reveal">
+      <span class="section-num">12</span>
+      <h2 class="section-title">Suggested Learning Path</h2>
+    </div>
+    <p class="section-desc reveal">A realistic order to build these skills — each stage assumes roughly two to three weeks of applied practice on real or realistic data.</p>
+
+    <div class="path reveal">
+      <div class="path-item">
+        <h4>Weeks 1–2 — Interface &amp; first report</h4>
+        <p>Explore Report/Data/Model views, connect to an Excel or CSV source, build a simple page with 3–4 visuals and slicers.</p>
+      </div>
+      <div class="path-item">
+        <h4>Weeks 3–4 — Power Query &amp; data modeling</h4>
+        <p>Clean a messy multi-table dataset, build a star schema, set relationships, and mark a proper Date table.</p>
+      </div>
+      <div class="path-item">
+        <h4>Weeks 5–7 — DAX fundamentals</h4>
+        <p>Write measures using CALCULATE, FILTER, and variables. Rebuild the same KPI as a calculated column and a measure to feel the difference.</p>
+      </div>
+      <div class="path-item">
+        <h4>Weeks 8–9 — Time intelligence</h4>
+        <p>Build YTD, YoY growth, and a rolling 12-month trend on top of your Date table.</p>
+      </div>
+      <div class="path-item">
+        <h4>Weeks 10–11 — Interactivity &amp; security</h4>
+        <p>Add bookmarks, drill-through pages, and set up Row-Level Security with at least one dynamic role.</p>
+      </div>
+      <div class="path-item">
+        <h4>Weeks 12+ — Publish, optimize, and iterate</h4>
+        <p>Publish to a workspace, set a refresh schedule, then use Performance Analyzer to find and fix the slowest visual on your busiest page.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta wrap reveal">
+    <h2>Bookmark it. Build with it.</h2>
+    <p>Reading this once won't make it stick — rebuild one real report from your own work using a technique from each section.</p>
+    <a class="btn" href="https://rajashekarelluri1.github.io/about/">← Back to Portfolio Home</a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="foot-left">
+      <span class="copyright">© 2025 Elluri Rajashekar. All rights reserved.</span>
+      Passionate about data-driven insights, automation, and innovation.
+    </div>
+    <a href="https://rajashekarelluri1.github.io/about/">rajashekarelluri1.github.io</a>
+  </div>
+</footer>
+
+<script>
+  // ================= Animated name intro =================
+  const nameText = "Elluri Rajashekar";
+  const roleText = " — Data Analyst";
+  const nameEl = document.getElementById('animatedName');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function buildAnimatedName(){
+    let delay = 0;
+    nameText.split('').forEach(ch=>{
+      const span = document.createElement('span');
+      span.className = 'letter';
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      if(!reduceMotion) span.style.animationDelay = delay + 's';
+      nameEl.appendChild(span);
+      delay += 0.035;
+    });
+    roleText.split('').forEach(ch=>{
+      const span = document.createElement('span');
+      span.className = 'letter role';
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      if(!reduceMotion) span.style.animationDelay = delay + 's';
+      nameEl.appendChild(span);
+      delay += 0.035;
+    });
+  }
+  buildAnimatedName();
+
+  // ================= DAX cheat sheet data =================
+  const daxData = [
+    // Aggregation
+    {name:"SUM", cat:"Aggregation", syntax:"SUM(column)", desc:"Adds all numbers in a column.", daily:true},
+    {name:"SUMX", cat:"Aggregation", syntax:"SUMX(table, expression)", desc:"Sums an expression evaluated row-by-row.", daily:true},
+    {name:"AVERAGE", cat:"Aggregation", syntax:"AVERAGE(column)", desc:"Arithmetic mean of a column.", daily:true},
+    {name:"AVERAGEX", cat:"Aggregation", syntax:"AVERAGEX(table, expression)", desc:"Average of an expression evaluated row-by-row.", daily:false},
+    {name:"COUNT", cat:"Aggregation", syntax:"COUNT(column)", desc:"Counts cells containing numbers.", daily:false},
+    {name:"COUNTA", cat:"Aggregation", syntax:"COUNTA(column)", desc:"Counts non-blank values of any type.", daily:false},
+    {name:"COUNTROWS", cat:"Aggregation", syntax:"COUNTROWS(table)", desc:"Counts rows in a table or table expression.", daily:true},
+    {name:"COUNTBLANK", cat:"Aggregation", syntax:"COUNTBLANK(column)", desc:"Counts blank cells in a column.", daily:false},
+    {name:"DISTINCTCOUNT", cat:"Aggregation", syntax:"DISTINCTCOUNT(column)", desc:"Counts unique values in a column.", daily:true},
+    {name:"MIN / MAX", cat:"Aggregation", syntax:"MIN(column) / MAX(column)", desc:"Smallest / largest value in a column.", daily:true},
+    {name:"MINX / MAXX", cat:"Aggregation", syntax:"MAXX(table, expression)", desc:"Smallest / largest value of an expression evaluated row-by-row.", daily:false},
+
+    // Filter functions
+    {name:"CALCULATE", cat:"Filter", syntax:"CALCULATE(expression, filter1, ...)", desc:"Evaluates an expression in a modified filter context — the core of DAX.", daily:true},
+    {name:"CALCULATETABLE", cat:"Filter", syntax:"CALCULATETABLE(table, filter1, ...)", desc:"Like CALCULATE but returns a table instead of a scalar.", daily:false},
+    {name:"FILTER", cat:"Filter", syntax:"FILTER(table, condition)", desc:"Returns a filtered table for use inside another function.", daily:true},
+    {name:"ALL", cat:"Filter", syntax:"ALL(table or column)", desc:"Removes filters from a table or column.", daily:true},
+    {name:"ALLEXCEPT", cat:"Filter", syntax:"ALLEXCEPT(table, column1, ...)", desc:"Removes all filters except the ones specified.", daily:false},
+    {name:"ALLSELECTED", cat:"Filter", syntax:"ALLSELECTED(table or column)", desc:"Removes filters added inside the visual, keeps outer slicers.", daily:false},
+    {name:"REMOVEFILTERS", cat:"Filter", syntax:"REMOVEFILTERS(table or column)", desc:"Explicitly clears filters — a clearer-intent alternative to ALL.", daily:false},
+    {name:"KEEPFILTERS", cat:"Filter", syntax:"KEEPFILTERS(expression)", desc:"Adds a filter without overwriting existing ones on the same column.", daily:false},
+
+    // Logical
+    {name:"IF", cat:"Logical", syntax:"IF(condition, true_result, false_result)", desc:"Returns one value or another based on a condition.", daily:true},
+    {name:"SWITCH", cat:"Logical", syntax:"SWITCH(expression, val1, res1, ..., default)", desc:"Matches an expression against a list of cases.", daily:true},
+    {name:"AND / OR / NOT", cat:"Logical", syntax:"AND(condition1, condition2)", desc:"Combine or invert logical conditions.", daily:false},
+    {name:"IFERROR", cat:"Logical", syntax:"IFERROR(value, value_if_error)", desc:"Returns a fallback value if an expression errors.", daily:false},
+    {name:"DIVIDE", cat:"Logical", syntax:"DIVIDE(numerator, denominator, [alt])", desc:"Safe division — avoids divide-by-zero errors.", daily:true},
+
+    // Time Intelligence
+    {name:"TOTALYTD", cat:"Time Intelligence", syntax:"TOTALYTD(expression, dates)", desc:"Year-to-date total as of the current filter context.", daily:true},
+    {name:"TOTALQTD", cat:"Time Intelligence", syntax:"TOTALQTD(expression, dates)", desc:"Quarter-to-date total.", daily:false},
+    {name:"TOTALMTD", cat:"Time Intelligence", syntax:"TOTALMTD(expression, dates)", desc:"Month-to-date total.", daily:false},
+    {name:"SAMEPERIODLASTYEAR", cat:"Time Intelligence", syntax:"SAMEPERIODLASTYEAR(dates)", desc:"Shifts the date filter back exactly one year.", daily:true},
+    {name:"DATEADD", cat:"Time Intelligence", syntax:"DATEADD(dates, number, interval)", desc:"Shifts dates by a given number of periods.", daily:true},
+    {name:"PARALLELPERIOD", cat:"Time Intelligence", syntax:"PARALLELPERIOD(dates, number, interval)", desc:"Returns a full parallel period (e.g. entire prior month).", daily:false},
+    {name:"DATESYTD / DATESQTD / DATESMTD", cat:"Time Intelligence", syntax:"DATESYTD(dates)", desc:"Returns the date column filtered to the YTD/QTD/MTD range.", daily:false},
+    {name:"PREVIOUSMONTH / PREVIOUSYEAR", cat:"Time Intelligence", syntax:"PREVIOUSMONTH(dates)", desc:"Returns dates from the prior month or year.", daily:false},
+    {name:"FIRSTDATE / LASTDATE", cat:"Time Intelligence", syntax:"LASTDATE(dates)", desc:"First or last date in the current context.", daily:true},
+    {name:"DATESBETWEEN", cat:"Time Intelligence", syntax:"DATESBETWEEN(dates, start, end)", desc:"Returns dates within a specific custom range.", daily:false},
+    {name:"DATESINPERIOD", cat:"Time Intelligence", syntax:"DATESINPERIOD(dates, start, n, interval)", desc:"Rolling window of dates — e.g. trailing 12 months.", daily:true},
+
+    // Table manipulation
+    {name:"RELATED", cat:"Table", syntax:"RELATED(column)", desc:"Pulls a value from a related table on the 'one' side.", daily:true},
+    {name:"RELATEDTABLE", cat:"Table", syntax:"RELATEDTABLE(table)", desc:"Returns related rows from the 'many' side of a relationship.", daily:false},
+    {name:"VALUES", cat:"Table", syntax:"VALUES(column)", desc:"Returns distinct values visible in the current filter context.", daily:true},
+    {name:"DISTINCT", cat:"Table", syntax:"DISTINCT(column)", desc:"Returns unique values, ignoring filter context blanks.", daily:false},
+    {name:"SUMMARIZE", cat:"Table", syntax:"SUMMARIZE(table, groupBy1, ..., name, expr)", desc:"Groups a table and adds aggregated columns.", daily:false},
+    {name:"SUMMARIZECOLUMNS", cat:"Table", syntax:"SUMMARIZECOLUMNS(groupBy, filter, name, expr)", desc:"Modern, more efficient version of SUMMARIZE.", daily:false},
+    {name:"ADDCOLUMNS", cat:"Table", syntax:"ADDCOLUMNS(table, name, expression, ...)", desc:"Adds calculated columns to a table expression.", daily:false},
+    {name:"SELECTCOLUMNS", cat:"Table", syntax:"SELECTCOLUMNS(table, name, expression, ...)", desc:"Returns a table with only the specified columns.", daily:false},
+    {name:"GROUPBY", cat:"Table", syntax:"GROUPBY(table, groupBy1, ..., name, expr)", desc:"Groups rows, similar to SQL GROUP BY.", daily:false},
+    {name:"UNION", cat:"Table", syntax:"UNION(table1, table2)", desc:"Stacks tables with matching columns.", daily:false},
+    {name:"CROSSJOIN", cat:"Table", syntax:"CROSSJOIN(table1, table2)", desc:"Every combination of rows from two tables.", daily:false},
+
+    // Ranking / Statistical
+    {name:"RANKX", cat:"Ranking", syntax:"RANKX(table, expression, [value], [order])", desc:"Ranks a value against a table expression.", daily:true},
+    {name:"TOPN", cat:"Ranking", syntax:"TOPN(n, table, orderBy)", desc:"Returns the top N rows by a given expression.", daily:false},
+    {name:"MEDIAN", cat:"Ranking", syntax:"MEDIAN(column)", desc:"Middle value of a column.", daily:false},
+    {name:"STDEV.P / STDEV.S", cat:"Ranking", syntax:"STDEV.S(column)", desc:"Standard deviation (population / sample).", daily:false},
+    {name:"PERCENTILE.INC", cat:"Ranking", syntax:"PERCENTILE.INC(column, k)", desc:"Value at a given percentile.", daily:false},
+
+    // Text
+    {name:"CONCATENATE", cat:"Text", syntax:"CONCATENATE(text1, text2)", desc:"Joins two text strings.", daily:false},
+    {name:"FORMAT", cat:"Text", syntax:"FORMAT(value, format_string)", desc:"Formats a number or date as text for display.", daily:true},
+    {name:"LEFT / RIGHT / MID", cat:"Text", syntax:"MID(text, start, chars)", desc:"Extracts characters from a text string.", daily:false},
+    {name:"LEN", cat:"Text", syntax:"LEN(text)", desc:"Counts the number of characters in text.", daily:false},
+
+    // Date
+    {name:"DATE", cat:"Date", syntax:"DATE(year, month, day)", desc:"Builds a date from separate components.", daily:false},
+    {name:"CALENDAR", cat:"Date", syntax:"CALENDAR(start, end)", desc:"Generates a continuous date table between two dates.", daily:true},
+    {name:"CALENDARAUTO", cat:"Date", syntax:"CALENDARAUTO([month_end])", desc:"Auto-generates a date table spanning all dates used in the model.", daily:false},
+    {name:"YEAR / MONTH / DAY", cat:"Date", syntax:"YEAR(date)", desc:"Extracts a date component.", daily:true},
+    {name:"EOMONTH", cat:"Date", syntax:"EOMONTH(start, months)", desc:"Last day of the month, N months away.", daily:false},
+    {name:"TODAY / NOW", cat:"Date", syntax:"TODAY() / NOW()", desc:"Current date / current date and time.", daily:false},
+
+    // Info
+    {name:"ISBLANK", cat:"Info", syntax:"ISBLANK(value)", desc:"Checks whether a value is blank.", daily:false},
+    {name:"ISERROR", cat:"Info", syntax:"ISERROR(value)", desc:"Checks whether an expression returns an error.", daily:false},
+    {name:"HASONEVALUE", cat:"Info", syntax:"HASONEVALUE(column)", desc:"Checks whether exactly one value is visible in context — common in title measures.", daily:true},
+    {name:"SELECTEDVALUE", cat:"Info", syntax:"SELECTEDVALUE(column, [alt])", desc:"Returns the single selected value, or a fallback if multiple are selected.", daily:true},
+    {name:"USERPRINCIPALNAME", cat:"Info", syntax:"USERPRINCIPALNAME()", desc:"Returns the signed-in user's email — the basis for dynamic RLS.", daily:false},
+  ];
+
+  const categories = ["All", ...Array.from(new Set(daxData.map(f=>f.cat)))];
+  const catPillsEl = document.getElementById('catPills');
+  let activeCat = "All";
+  let searchTerm = "";
+
+  categories.forEach(cat=>{
+    const btn = document.createElement('button');
+    btn.className = 'cat-pill' + (cat === 'All' ? ' active' : '');
+    btn.textContent = cat;
+    btn.dataset.cat = cat;
+    btn.addEventListener('click', ()=>{
+      activeCat = cat;
+      document.querySelectorAll('.cat-pill').forEach(p=>p.classList.toggle('active', p.dataset.cat === cat));
+      renderCheatGrid();
+    });
+    catPillsEl.appendChild(btn);
+  });
+
+  function renderCheatGrid(){
+    const grid = document.getElementById('cheatGrid');
+    const meta = document.getElementById('cheatMeta');
+    const term = searchTerm.trim().toLowerCase();
+    const filtered = daxData.filter(f=>{
+      const matchesCat = activeCat === 'All' || f.cat === activeCat;
+      const matchesTerm = !term || f.name.toLowerCase().includes(term) || f.desc.toLowerCase().includes(term) || f.cat.toLowerCase().includes(term);
+      return matchesCat && matchesTerm;
+    });
+
+    meta.innerHTML = 'Showing <b>' + filtered.length + '</b> of <b>' + daxData.length + '</b> DAX functions' + (activeCat !== 'All' ? ' in <b>' + activeCat + '</b>' : '');
+
+    grid.innerHTML = '';
+    if(filtered.length === 0){
+      grid.innerHTML = '<div class="no-results">No DAX functions match "' + term + '" — try a different keyword.</div>';
+      return;
+    }
+
+    filtered.forEach(f=>{
+      const card = document.createElement('div');
+      card.className = 'cheat-card';
+      card.innerHTML =
+        '<div class="cheat-card-head">' +
+          '<span class="cheat-name">' + f.name + '</span>' +
+          '<span class="cheat-badges">' + (f.daily ? '<span class="star-badge" title="Daily use">★</span>' : '') + '<span class="cat-badge">' + f.cat + '</span></span>' +
+        '</div>' +
+        '<div class="cheat-syntax">' + f.syntax + '</div>' +
+        '<div class="cheat-desc">' + f.desc + '</div>' +
+        '<button class="copy-btn" type="button">Copy formula</button>';
+
+      card.querySelector('.copy-btn').addEventListener('click', function(){
+        const btn = this;
+        navigator.clipboard.writeText(f.syntax).then(()=>{
+          btn.textContent = 'Copied ✓';
+          btn.classList.add('copied');
+          setTimeout(()=>{ btn.textContent = 'Copy formula'; btn.classList.remove('copied'); }, 1400);
+        }).catch(()=>{
+          btn.textContent = 'Press Ctrl+C';
+        });
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  document.getElementById('cheatSearch').addEventListener('input', (e)=>{
+    searchTerm = e.target.value;
+    renderCheatGrid();
+  });
+
+  renderCheatGrid();
+
+  // ================= Hero stat counters =================
+  function countUp(el, target){
+    if(reduceMotion){ el.childNodes[0].nodeValue = target; return; }
+    let cur = 0;
+    const step = Math.max(1, Math.round(target/40));
+    const tick = ()=>{
+      cur += step;
+      if(cur >= target){ el.childNodes[0].nodeValue = target; return; }
+      el.childNodes[0].nodeValue = cur;
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }
+  window.addEventListener('load', ()=>{
+    countUp(document.getElementById('statDax'), daxData.length);
+    countUp(document.getElementById('statModules'), 12);
+    countUp(document.getElementById('statWeeks'), 12);
+  });
+
+  // ================= report canvas mock chart =================
+  const rmChart = document.getElementById('rmChart');
+  const barHeights = [42, 68, 55, 90, 60, 75, 50];
+  barHeights.forEach((h, i)=>{
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = h + '%';
+    bar.style.animationDelay = (0.7 + i*0.06) + 's';
+    rmChart.appendChild(bar);
+  });
+
+  // ================= scroll progress bar =================
+  const bar = document.getElementById('scrollProgress');
+  function updateProgress(){
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    bar.style.width = scrolled + '%';
+  }
+  document.addEventListener('scroll', updateProgress, {passive:true});
+  updateProgress();
+
+  // ================= reveal on scroll =================
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:0.12});
+  revealEls.forEach(el=>io.observe(el));
+
+  // ================= active pill nav + skill ladder =================
+  const sections = document.querySelectorAll('section[id]');
+  const pills = document.querySelectorAll('.pill-nav a');
+  const stages = document.querySelectorAll('.stage');
+  const stageMap = {
+    cheatsheet:'getting-started', 'getting-started':'getting-started', 'power-query':'getting-started',
+    modeling:'modeling', 'dax-basics':'modeling',
+    'time-intel':'time-intel',
+    visuals:'reports', reports:'reports', rls:'reports',
+    service:'performance', performance:'performance', shortcuts:'performance', path:'performance'
+  };
+  const navObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const id = entry.target.id;
+        pills.forEach(p=>p.classList.toggle('active', p.getAttribute('href') === '#'+id));
+        const target = stageMap[id];
+        if(target){ stages.forEach(s=>s.classList.toggle('active', s.dataset.target === target)); }
+      }
+    });
+  }, {rootMargin:'-40% 0px -50% 0px'});
+  sections.forEach(s=>navObserver.observe(s));
+
+  stages.forEach(s=>{
+    s.addEventListener('click', ()=>{
+      const el = document.getElementById(s.dataset.target);
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  // ================= hero DAX formula typewriter =================
+  const heroDax = [
+    "TOTALYTD([Total Sales], 'Date'[Date])",
+    "CALCULATE([Sales], SAMEPERIODLASTYEAR('Date'[Date]))",
+    'DIVIDE([This Year] - [Last Year], [Last Year])',
+    'RANKX(ALL(Product[Name]), [Total Sales])',
+    'SELECTEDVALUE(Region[Name], "All Regions")'
+  ];
+  const typedEl = document.getElementById('typedDax');
+  let fi = 0, ci = 0, deleting = false;
+
+  function typeLoop(){
+    if(reduceMotion){ typedEl.textContent = heroDax[0]; return; }
+    const current = heroDax[fi];
+    if(!deleting){
+      ci++;
+      typedEl.textContent = current.slice(0, ci);
+      if(ci === current.length){ deleting = true; setTimeout(typeLoop, 1600); return; }
+    } else {
+      ci--;
+      typedEl.textContent = current.slice(0, ci);
+      if(ci === 0){ deleting = false; fi = (fi+1) % heroDax.length; }
+    }
+    setTimeout(typeLoop, deleting ? 28 : 45);
+  }
+  typeLoop();
+</script>
+
+</body>
+</html>
